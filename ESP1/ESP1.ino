@@ -64,7 +64,7 @@ void setup() {
 
   // ESP-1 Server
   // Purpose of this server is to get distance by RSSI data from this to NodeMCU Vehicle.
-  // Vehicel will be making 3 request each for correspongind ESP module to gather nessecary distance data.
+  // Vehicle will be making 3 request each to corresponding ESP module to gather nessecary distance data.
   // Then vehicle going to implement trilateration.
   server.on("/esp1distance", handleDistance);
 
