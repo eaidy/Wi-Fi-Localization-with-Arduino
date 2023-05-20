@@ -1,18 +1,25 @@
 #include <ESP8266WiFi.h>
 #include <math.h>
 
+// Node Server URL's
+#define NODE1_DISTANCE_URL "getnode1distance"
+#define NODE2_DISTANCE_URL "getnode2distance"
+#define NODE3_DISTANCE_URL "getnode3distance"
+
+enum ConnectionState {
+  NoDevicesConnected = 0,
+  OneDevicesConnected = 1,
+  TwoDevicesConnected = 2,
+  ThreeDevicesConnected = 3,
+  AllDevicesConnected = 4
+};
+
 // Prototypes
 bool checkConnection(const IPAddress& ip);
 
 // Access Point Credentials
 const char* ssid = "VehicleAP";
 const char* password = "12345678";
-
-// Nodes/Sensor IP Addresses
-IPAddress NODE1_IP(192, 168, 1, 101);
-IPAddress NODE2_IP(192, 168, 1, 102);
-IPAddress NODE3_IP(192, 168, 1, 103);
-IPAddress FIRE_SENSOR(192, 168, 1, 104);
 
 // Coordinate System configuration - Node positions
 struct Coordinates {
@@ -31,12 +38,19 @@ struct TrilaterationNode {
   int id;
   bool connectionStatus;
   float distance = 0;
+  const float x;
+  const float y;
+};
+
+struct Vehicle {
+
   float x;
   float y;
 };
 
 struct FireSensor {
   IDAddress ip;
+  bool connectionStatus;
   float humadityLevel;
   float tempertureLevel;
   float somekeLevel;
@@ -53,13 +67,16 @@ class SystemNetwork {
     // Fire Sensor
     FireSensor FIRE_SENSOR_NODE;
 
-    SystemNetwork(TrilaterationNode& node_1, TrilaterationNode& node_2, TrilaterationNode& node_3){
-      
-      if(!checkConnection(node_1.ip)) node_1.connectionStatus = 0;
-      if(!checkConnection(node_2.ip)) node_2.connectionStatus = 0;
-      if(!checkConnection(node_3.ip)) node_3.connectionStatus = 0;
+    // Vehicle
+    Vehicle VEHICLE;
 
-      switch()
+    SystemNetwork(TrilaterationNode& node_1, TrilaterationNode& node_2, TrilaterationNode& node_3, FireSensor& sensor){
+      
+      int numDevices = WiFi.softAPgetStationNum();
+
+      if(numDevices < 4) {
+
+      };
 
       NODE_1 = node_1;
       NODE_2 = node_2;

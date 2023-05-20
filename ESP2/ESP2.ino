@@ -45,12 +45,12 @@ void setup() {
   digitalWrite(FAILURE_PIN, HIGH);
 
   delay(10);
-  // Serial.println('\n');
+  Serial.println('\n');
   
   // Connection begin
   WiFi.begin(ssid, password);             // Connect to the network
-  // Serial.print("Connecting to ");
-  // Serial.print(ssid); Serial.println(" ...");
+  Serial.print("Connecting to ");
+  Serial.print(ssid); Serial.println(" ...");
 
   int i = 0;
   while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
@@ -59,17 +59,17 @@ void setup() {
     Serial.print(' ');
   }
 
-  // Serial.println('\n');
-  // Serial.println("Connection established!");  
+  Serial.println('\n');
+  Serial.println("Connection established!");  
 
   // ESP-1 Server
   // Purpose of this server is to get distance by RSSI data from this to NodeMCU Vehicle.
   // Vehicle will be making 3 request each to corresponding ESP module to gather nessecary distance data.
   // Then vehicle going to implement trilateration.
-  server.on("/getnode1distance", handleDistance);
+  server.on("/esp1distance", handleDistance);
 
   server.begin();
-  // Serial.println("HTTP server started");
+  Serial.println("HTTP server started");
 }
 
 void loop() {
