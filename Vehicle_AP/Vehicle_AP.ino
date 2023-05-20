@@ -1,81 +1,114 @@
 #include <ESP8266WiFi.h>
-#include <ESP8266WiFiAP.h>
-#include <ESP8266WiFiGeneric.h>
-#include <ESP8266WiFiMulti.h>
-#include <ESP8266WiFiScan.h>
-#include <ESP8266WiFiSTA.h>
-#include <ESP8266WiFiType.h>
-#include <WiFiClient.h>
-#include <WiFiClientSecure.h>
-#include <WiFiServer.h>
-#include <WiFiUdp.h>
-#include <ESP8266WiFi.h>
-#include <DNSServer.h> 
-#include <ESP8266WebServer.h>
-#include "SystemLibrary.h"
+#include <math.h>
 
-#define APSSID "VehicleAP" // SSID & Title
-#define APPASSWORD "12345678" // Blank password = Open AP
+// Prototypes
+bool checkConnection(const IPAddress& ip);
 
-// Network Config
-IPAddress APIP(192, 168, 2, 1);
-DNSServer dnsServer; ESP8266WebServer webServer(80);
+// Access Point Credentials
+const char* ssid = "VehicleAP";
+const char* password = "12345678";
 
-// Time Config
-int controlTimeFlagState = 0;
-int currentTimeFlagState = 0; // Current time flag in terms of ms
-int duration = 100; // ms
+// Nodes/Sensor IP Addresses
+IPAddress NODE1_IP(192, 168, 1, 101);
+IPAddress NODE2_IP(192, 168, 1, 102);
+IPAddress NODE3_IP(192, 168, 1, 103);
+IPAddress FIRE_SENSOR(192, 168, 1, 104);
+
+// Coordinate System configuration - Node positions
+struct Coordinates {
+  float x;
+  float y;
+};
+
+Coordinates NODE1_XY = { 0, -5.0 };
+Coordinates NODE2_XY = { 0, 0 };
+Coordinates NODE3_XY = { 10.0, 0 };
+Coordinates FIRE_SENSOR_XY = { 6.5, -2 };   // Fire Sensor's coordinates likely to be pre-defined. It's hard to get both Vehicle's and Sensor's coordinates by Wi-Fi trilateration.
+
+// System & Localization Node & Network Abstraction
+struct TrilaterationNode {
+  IPAddress ip;
+  int id;
+  bool connectionStatus;
+  float distance = 0;
+  float x;
+  float y;
+};
+
+struct FireSensor {
+  IDAddress ip;
+  float humadityLevel;
+  float tempertureLevel;
+  float somekeLevel;
+};
+
+class SystemNetwork {
+
+  public:
+    // Trilateration Nodes
+    TrilaterationNode NODE_1;
+    TrilaterationNode NODE_2;
+    TrilaterationNode NODE_3;
+
+    // Fire Sensor
+    FireSensor FIRE_SENSOR_NODE;
+
+    SystemNetwork(TrilaterationNode& node_1, TrilaterationNode& node_2, TrilaterationNode& node_3){
+      
+      if(!checkConnection(node_1.ip)) node_1.connectionStatus = 0;
+      if(!checkConnection(node_2.ip)) node_2.connectionStatus = 0;
+      if(!checkConnection(node_3.ip)) node_3.connectionStatus = 0;
+
+      switch()
+
+      NODE_1 = node_1;
+      NODE_2 = node_2;
+      NODE_3 = node_3;
+    }
+
+    void configureNodeProperties(){
+
+    }
+
+    void getDistanceMeasurement(int ESP_ID){
+
+    }
+};
 
 void setup() {
-  
-  Serial.begin(9600);
+  // Set up access point mode
   WiFi.mode(WIFI_AP);
-  WiFi.softAPConfig(APIP, APIP, IPAddress(255, 255, 255, 0));
-  WiFi.softAP(APSSID, APPASSWORD);
+  WiFi.softAP(ssid, password);
 
-  webServer.on("/",[]() { 
-    Serial.println("EVET!");
-    myFunc(5);
-    webServer.send(200, "text/html", "Success!");
-  });
-
-  // webServer.on("/1ON",[]() { 
-  //   digitalWrite(13, HIGH);
-  //   webServer.send(200, "text/html", index()); 
-  // });
-  webServer.onNotFound([]() {
-    Serial.println("NOT FOUND!");
-  });
-
-  webServer.begin();
-  digitalWrite(16, LOW); // The built-in led will notify us that the setup is finished.
-  digitalWrite(16, HIGH);
+  // Print the access point IP address
+  Serial.begin(115200);
+  Serial.print("Access Point IP address: ");
+  Serial.println(WiFi.softAPIP());
 }
-
 
 void loop() {
-
-  currentTimeFlagState = millis();
-
-  if(currentTimeFlagState % duration == 10){
-    Serial.println(currentTimeFlagState);
-
-
-    controlTimeFlagState = currentTimeFlagState;
+  // Get the number of connected stations
+  int stationCount = WiFi.softAPgetStationNum();
+  
+  // Print the IP addresses of connected stations
+  for (int i = 0; i < stationCount; i++) {
+    IPAddress stationIP = WiFi.softAPgetStationIP(i);
+    Serial.print("Station ");
+    Serial.print(i + 1);
+    Serial.print(" IP address: ");
+    Serial.println(stationIP);
   }
 
-  dnsServer.processNextRequest(); 
-  webServer.handleClient();
+  // Add a delay before checking the connections again
+  delay(5000);
 }
 
+bool checkConnection(const IPAddress& ip) {
+  int packetsReceived = WiFi.ping(ip);
 
-
-
-
-
-
-
-
-
-
-
+  if (packetsReceived) {
+    return true;
+  } else {
+    return false;
+  }
+}

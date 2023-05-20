@@ -110,6 +110,8 @@ void handleDistance(){
 
   bool calculatedOK = calculateDistance(&distance_esp1_vehicle);
   if(calculatedOK){
+    ESP1_DATA["distance"] = distance_esp1_vehicle;
+    
     String ESP1_DATA_BUFFER;
     serializeJson(ESP1_DATA, ESP1_DATA_BUFFER);
     server.send(200, "application/json", ESP1_DATA_BUFFER);
