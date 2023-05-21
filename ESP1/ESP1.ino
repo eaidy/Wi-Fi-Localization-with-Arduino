@@ -66,7 +66,8 @@ void setup() {
   // Purpose of this server is to get distance by RSSI data from this to NodeMCU Vehicle.
   // Vehicle will be making 3 request each to corresponding ESP module to gather nessecary distance data.
   // Then vehicle going to implement trilateration.
-  server.on("/getnode1distance", handleDistance);
+  server.on("/getnodeprops", handleNodeProps);
+  server.on("/getnodedistance", handleDistance);
 
   server.begin();
   // Serial.println("HTTP server started");
@@ -101,12 +102,23 @@ void connectionStateToggle(){
 
 };
 
+void handleNodeProps(){
+  StaticJsonDocument<100> ESP1_DATA;
+  ESP1_DATA["id"] = ESP1_ID;
+  ESP1_DATA["ip"] = WiFi.localIP().toString();
+
+  String ESP1_DATA_BUFFER;
+  serializeJson(ESP1_DATA, ESP1_DATA_BUFFER);
+
+  server.send(200, "application/json", ESP1_DATA_BUFFER);
+}
+
 void handleDistance(){
 
   // Create JSON ESP1_DATAument for HTTP
   StaticJsonDocument<100> ESP1_DATA;
   ESP1_DATA["id"] = ESP1_ID;
-  ESP1_DATA["ip"] = WiFi.localIP();
+  ESP1_DATA["ip"] = WiFi.localIP().toString();
 
   bool calculatedOK = calculateDistance(&distance_esp1_vehicle);
   if(calculatedOK){
