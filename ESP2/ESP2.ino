@@ -1,4 +1,4 @@
-// ESP-1
+// ESP-3
 // Trilateration sensor code for the sensor with id = 1
 
 #include <ESP8266WiFi.h>        // Include the Wi-Fi library
@@ -8,7 +8,7 @@
 // Pre-Definitions
 #define SUCCESS_PIN 2           // Pin that indicates Wi-Fi connection with AP is established
 #define FAILURE_PIN 1           // Pin that indicates Wi-Fi connection is not established or lost
-#define ESP1_ID 1
+#define NODE_ID 2
 
 // Prototypes
 void connectionStateToggle(void);
@@ -27,7 +27,7 @@ unsigned long previousTime = 0;
 const unsigned long interval = 500; // Blink interval in milliseconds
 
 // Trilateration Variables to be sent
-float distance_esp1_vehicle;
+float distance_node_vehicle;
 
 // RSSI Calibration constants
 const int RSSI_SAMPLES = 10;
@@ -45,12 +45,12 @@ void setup() {
   digitalWrite(FAILURE_PIN, HIGH);
 
   delay(10);
-  Serial.println('\n');
+  // Serial.println('\n');
   
   // Connection begin
   WiFi.begin(ssid, password);             // Connect to the network
-  Serial.print("Connecting to ");
-  Serial.print(ssid); Serial.println(" ...");
+  // Serial.print("Connecting to ");
+  // Serial.print(ssid); Serial.println(" ...");
 
   int i = 0;
   while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
@@ -59,17 +59,18 @@ void setup() {
     Serial.print(' ');
   }
 
-  Serial.println('\n');
-  Serial.println("Connection established!");  
+  // Serial.println('\n');
+  // Serial.println("Connection established!");  
 
   // ESP-1 Server
   // Purpose of this server is to get distance by RSSI data from this to NodeMCU Vehicle.
   // Vehicle will be making 3 request each to corresponding ESP module to gather nessecary distance data.
   // Then vehicle going to implement trilateration.
-  server.on("/esp1distance", handleDistance);
+  server.on("/getnodeprops", handleNodeProps);
+  server.on("/getnodedistance", handleDistance);
 
   server.begin();
-  Serial.println("HTTP server started");
+  // Serial.println("HTTP server started");
 }
 
 void loop() {
@@ -101,20 +102,31 @@ void connectionStateToggle(){
 
 };
 
+void handleNodeProps(){
+  StaticJsonDocument<100> NODE_PROPS;
+  NODE_PROPS["id"] = NODE_ID;
+  NODE_PROPS["ip"] = WiFi.localIP().toString();
+
+  String NODE_PROPS_BUFFER;
+  serializeJson(NODE_PROPS, NODE_PROPS_BUFFER);
+
+  server.send(200, "application/json", NODE_PROPS_BUFFER);
+}
+
 void handleDistance(){
 
-  // Create JSON ESP1_DATAument for HTTP
-  StaticJsonDocument<100> ESP1_DATA;
-  ESP1_DATA["id"] = ESP1_ID;
-  ESP1_DATA["ip"] = WiFi.localIP();
+  // Create JSON NODE_PROPSument for HTTP
+  StaticJsonDocument<100> NODE_PROPS;
+  NODE_PROPS["id"] = NODE_ID;
+  NODE_PROPS["ip"] = WiFi.localIP().toString();
 
-  bool calculatedOK = calculateDistance(&distance_esp1_vehicle);
+  bool calculatedOK = calculateDistance(&distance_node_vehicle);
   if(calculatedOK){
-    ESP1_DATA["distance"] = distance_esp1_vehicle;
+    NODE_PROPS["distance"] = distance_node_vehicle;
     
-    String ESP1_DATA_BUFFER;
-    serializeJson(ESP1_DATA, ESP1_DATA_BUFFER);
-    server.send(200, "application/json", ESP1_DATA_BUFFER);
+    String NODE_PROPS_BUFFER;
+    serializeJson(NODE_PROPS, NODE_PROPS_BUFFER);
+    server.send(200, "application/json", NODE_PROPS_BUFFER);
   }
 }
 

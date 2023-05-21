@@ -1,4 +1,4 @@
-// ESP-1
+// ESP-3
 // Trilateration sensor code for the sensor with id = 1
 
 #include <ESP8266WiFi.h>        // Include the Wi-Fi library
@@ -8,7 +8,7 @@
 // Pre-Definitions
 #define SUCCESS_PIN 2           // Pin that indicates Wi-Fi connection with AP is established
 #define FAILURE_PIN 1           // Pin that indicates Wi-Fi connection is not established or lost
-#define ESP1_ID 1
+#define NODE_ID 1
 
 // Prototypes
 void connectionStateToggle(void);
@@ -27,7 +27,7 @@ unsigned long previousTime = 0;
 const unsigned long interval = 500; // Blink interval in milliseconds
 
 // Trilateration Variables to be sent
-float distance_esp1_vehicle;
+float distance_node_vehicle;
 
 // RSSI Calibration constants
 const int RSSI_SAMPLES = 10;
@@ -103,30 +103,30 @@ void connectionStateToggle(){
 };
 
 void handleNodeProps(){
-  StaticJsonDocument<100> ESP1_DATA;
-  ESP1_DATA["id"] = ESP1_ID;
-  ESP1_DATA["ip"] = WiFi.localIP().toString();
+  StaticJsonDocument<100> NODE_PROPS;
+  NODE_PROPS["id"] = NODE_ID;
+  NODE_PROPS["ip"] = WiFi.localIP().toString();
 
-  String ESP1_DATA_BUFFER;
-  serializeJson(ESP1_DATA, ESP1_DATA_BUFFER);
+  String NODE_PROPS_BUFFER;
+  serializeJson(NODE_PROPS, NODE_PROPS_BUFFER);
 
-  server.send(200, "application/json", ESP1_DATA_BUFFER);
+  server.send(200, "application/json", NODE_PROPS_BUFFER);
 }
 
 void handleDistance(){
 
-  // Create JSON ESP1_DATAument for HTTP
-  StaticJsonDocument<100> ESP1_DATA;
-  ESP1_DATA["id"] = ESP1_ID;
-  ESP1_DATA["ip"] = WiFi.localIP().toString();
+  // Create JSON NODE_PROPSument for HTTP
+  StaticJsonDocument<100> NODE_PROPS;
+  NODE_PROPS["id"] = NODE_ID;
+  NODE_PROPS["ip"] = WiFi.localIP().toString();
 
-  bool calculatedOK = calculateDistance(&distance_esp1_vehicle);
+  bool calculatedOK = calculateDistance(&distance_node_vehicle);
   if(calculatedOK){
-    ESP1_DATA["distance"] = distance_esp1_vehicle;
+    NODE_PROPS["distance"] = distance_node_vehicle;
     
-    String ESP1_DATA_BUFFER;
-    serializeJson(ESP1_DATA, ESP1_DATA_BUFFER);
-    server.send(200, "application/json", ESP1_DATA_BUFFER);
+    String NODE_PROPS_BUFFER;
+    serializeJson(NODE_PROPS, NODE_PROPS_BUFFER);
+    server.send(200, "application/json", NODE_PROPS_BUFFER);
   }
 }
 
