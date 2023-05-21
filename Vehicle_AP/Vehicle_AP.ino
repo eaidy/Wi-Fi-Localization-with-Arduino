@@ -72,7 +72,7 @@ class SystemNetwork {
     SystemNetwork(IPAddress* IPs, int stationCount){
       
       for(int i = 0; i < stationCount; i++){
-        String url = "http://" + IPs[0].toString() + NODE_CONFIG_URL;
+        String url = "http://" + IPs[i].toString() + NODE_CONFIG_URL;
         NodeResponse response = getNodeConfiguration(url);
 
         switch(response.id){
