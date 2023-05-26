@@ -12,7 +12,7 @@
 #define FAILURE_PIN 1           // Pin that indicates Wi-Fi connection is not established or lost
 #define NODE_ID 3
 
-#define INIT_URL "http://192.168.1.1:80/initnode1"
+#define INIT_URL "http://192.168.1.1:80/initnode3"
 
 // Prototypes
 void connectionStateToggle(void);
