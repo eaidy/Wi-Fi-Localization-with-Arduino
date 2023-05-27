@@ -53,8 +53,8 @@ struct TrilaterationNode {
   int id;
   bool connectionStatus = FALSE;
   float distance = 0;
-  const float x = NODE1_XY.x;
-  const float y = NODE1_XY.y;
+  float x = 0;
+  float y = 0;
 };
 
 struct Vehicle {
@@ -97,6 +97,12 @@ class SystemNetwork {
     };
 
     SystemNetwork(){
+      NODE_1.x = NODE1_XY.x;
+      NODE_1.y = NODE1_XY.y;
+      NODE_2.x = NODE2_XY.x;
+      NODE_2.y = NODE2_XY.y;
+      NODE_3.x = NODE3_XY.x;
+      NODE_3.y = NODE3_XY.y;
     }
 
     NodeResponse getNodeProps(const String& url) {
@@ -238,7 +244,8 @@ void loop() {
     previousTime = currentTime;
 
     if(VehicleNetwork.NODE_1.ip != ""){
-      VehicleNetwork.getNodeProps("http://192.168.1.100:80/getnodeprops");
+      String url = "http://" + VehicleNetwork.NODE_1.ip + ":80/getnodeprops";
+      VehicleNetwork.getNodeProps(url);
     }
     
   }

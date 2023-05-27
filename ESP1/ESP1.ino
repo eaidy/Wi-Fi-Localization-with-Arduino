@@ -31,9 +31,10 @@ unsigned long previousTime = 0;
 const unsigned long interval = 650; // Blink interval in milliseconds
 
 // RSSI Calibration constants
-const int RSSI_SAMPLES = 10;
-const int RSSI_AT_ONE_METER = -67;  // RSSI at one meter distance
-const int SIGNAL_LOSS_EXPONENT = 2;  // Signal loss exponent (path loss)
+const int RSSI_SAMPLES = 30;
+const int DIST_SAMPLES = 15;
+const float RSSI_AT_ONE_METER = -37.19;  // RSSI at one meter distance
+const float SIGNAL_LOSS_EXPONENT = 2.13;  // Signal loss exponent (path loss)
 
 void setup() {
 
@@ -122,17 +123,23 @@ float calculateDistance(){
   if(WiFi.status() == WL_CONNECTED){
 
     int rssiSum = 0, averageRssi;
-    float signalLoss, distance;
+    float signalLoss, distance, distanceSum = 0;
 
-    for (int i = 0; i < RSSI_SAMPLES; i++) {
-      int rssi = WiFi.RSSI();
-      rssiSum += rssi;
-      delay(10);
+    for(int i = 0; i < DIST_SAMPLES; i++){
+      for (int j = 0; j < RSSI_SAMPLES; j++) {
+        int rssi = WiFi.RSSI();
+        rssiSum += rssi;
+        delay(5);
+      }
+
+      averageRssi = rssiSum / RSSI_SAMPLES;
+      signalLoss = RSSI_AT_ONE_METER - averageRssi;
+      distanceSum += pow(10, signalLoss / (10 * SIGNAL_LOSS_EXPONENT));
+
+      // float rssi = WiFi.RSSI();
     }
 
-    averageRssi = rssiSum / RSSI_SAMPLES;
-    signalLoss = RSSI_AT_ONE_METER - averageRssi;
-    distance = pow(10, signalLoss / (10 * SIGNAL_LOSS_EXPONENT));
+    distance = distanceSum / DIST_SAMPLES;
 
     return distance;
   } 
