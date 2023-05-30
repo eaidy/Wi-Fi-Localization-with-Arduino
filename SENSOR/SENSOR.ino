@@ -6,11 +6,19 @@
 #include <ESP8266WebServer.h>   // Include Server library
 #include <WiFiClient.h>
 #include <ArduinoJson.h>
+#include <dht.h>
 
 // Pre-Definitions
-#define SUCCESS_PIN 2           // Pin that indicates Wi-Fi connection with AP is established
-#define FAILURE_PIN 1           // Pin that indicates Wi-Fi connection is not established or lost
-#define NODE_ID 1
+#define SUCCESS_PIN 6           // Pin that indicates Wi-Fi connection with AP is established
+#define FAILURE_PIN 7           // Pin that indicates Wi-Fi connection is not established or lost
+#define NODE_ID 2
+
+
+#define BUZZER_PIN 3
+#define MQ2_PIN A1
+#define FLAME_PIN A0
+#define DHT_PIN 2
+
 
 #define INIT_URL ("http://192.168.1.1:80/initnode" + String(NODE_ID))
 
@@ -30,10 +38,8 @@ ESP8266WebServer server(80);
 unsigned long previousTime = 0;
 const unsigned long interval = 650; // Blink interval in milliseconds
 
-// RSSI Calibration constants
-const int RSSI_SAMPLES = 30;
-const float RSSI_AT_ONE_METER = -47;  // RSSI at one meter distance
-const float SIGNAL_LOSS_EXPONENT = 2.2;  // Signal loss exponent (path loss)
+// DHT Sensor
+dht DHT;
 
 void setup() {
 
@@ -56,8 +62,6 @@ void setup() {
   int i = 0;
   while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
     delay(1000);
-    Serial.print(++i);
-    Serial.print(' ');
   }
 
   sendPropsToVehicle();
@@ -107,40 +111,11 @@ void handleNodeProps(){
   NODE_PROPS["id"] = NODE_ID;
   NODE_PROPS["ip"] = WiFi.localIP().toString();
 
-  float calculated = calculateDistance();
-  if(calculated){
-    NODE_PROPS["distance"] = calculated;
-    
-    String NODE_PROPS_BUFFER;
-    serializeJson(NODE_PROPS, NODE_PROPS_BUFFER);
-    server.send(200, "application/json", NODE_PROPS_BUFFER);
-   }
+
+  String NODE_PROPS_BUFFER;
+  serializeJson(NODE_PROPS, NODE_PROPS_BUFFER);
+  server.send(200, "application/json", NODE_PROPS_BUFFER);
 }
-
-float calculateDistance(){
-
-  if(WiFi.status() == WL_CONNECTED){
-
-    int rssiSum = 0, averageRssi;
-    float signalLoss, distance;
-
-    for (int j = 0; j < RSSI_SAMPLES; j++) {
-      int rssi = WiFi.RSSI();
-      rssiSum += rssi;
-      delay(5);
-    }
-
-    averageRssi = rssiSum / RSSI_SAMPLES;
-    signalLoss = RSSI_AT_ONE_METER - averageRssi;
-    distance = pow(10, signalLoss / (10 * SIGNAL_LOSS_EXPONENT));
-
-    // float rssi = WiFi.RSSI();
-
-    return distance;
-  } 
-  else return 0;
-  
-};
 
 void sendPropsToVehicle(){
   StaticJsonDocument<100> NODE_PROPS;
