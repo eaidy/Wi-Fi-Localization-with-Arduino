@@ -51,7 +51,6 @@ Coordinates FIRE_SENSOR_XY = { 6.5, -2 };   // Fire Sensor's coordinates likely 
 struct TrilaterationNode {
   String ip = "";
   int id;
-  bool connectionStatus = FALSE;
   float distance = 0;
   float x = 0;
   float y = 0;
@@ -66,12 +65,15 @@ struct FireSensor {
   String ip = "";
   int id = 4;
   float distance = 0;
-  bool connectionStatus;
-  float humadityLevel;
-  float tempertureLevel;
-  float somekeLevel;
+  int fire_state = FALSE;
   const float x = FIRE_SENSOR_XY.x;
   const float y = FIRE_SENSOR_XY.y;
+};
+
+struct NodeResponse {
+  int id;
+  const char* ip;
+  float distance;
 };
 
 // Entire System's Class, everything about this network system is going to be configured here
@@ -89,12 +91,6 @@ class SystemNetwork {
 
     // Vehicle
     Vehicle VEHICLE;
-
-    struct NodeResponse {
-      int id;
-      const char* ip;
-      float distance;
-    };
 
     SystemNetwork(){
       NODE_1.x = NODE1_XY.x;
@@ -186,7 +182,6 @@ class SystemNetwork {
         case 4:
           FIRE_SENSOR_NODE.id = NODE_ID;
           FIRE_SENSOR_NODE.ip = IP;
-          FIRE_SENSOR_NODE.distance = distance;
           Serial.print("ID : ");
           Serial.print(FIRE_SENSOR_NODE.id);
           Serial.print("\nIPAddress : ");
@@ -200,6 +195,12 @@ class SystemNetwork {
       }
 
       return TRUE;
+    }
+
+    void setSensorProps(FireSensor sensorProps){
+      FIRE_SENSOR_NODE.id = sensorProps.id;
+      FIRE_SENSOR_NODE.ip = sensorProps.ip;
+      FIRE_SENSOR_NODE.fire_state = sensorProps.fire_state;
     }
 };
 
@@ -240,6 +241,9 @@ void setup() {
   server.on("/initnode2", HTTP_POST, handleInitNode);
   server.on("/initnode3", HTTP_POST, handleInitNode);
   server.on("/initnode4", HTTP_POST, handleInitNode);
+
+  server.on("/sensorprops", HTTP_POST, handleSensorProps);
+
   server.enableCORS(true);
   server.begin();
   
@@ -295,6 +299,35 @@ void handleInitNode(){
         String ip = jsonDoc["ip"];
         int id = jsonDoc["id"];
         VehicleNetwork.configureNode(id, ip);
+      }
+ 
+      server.send(200, "text/plain", "SUCCESS!");
+}
+
+void handleSensorProps(){
+      FireSensor sensorBuffer;
+
+      if (server.hasArg("plain")== false){ //Check if body received
+        server.send(200, "text/plain", "NO BODY AVAILABLE!");
+        return;
+      }
+
+      String sensorProps;
+      sensorProps = server.arg("plain");
+
+      DynamicJsonDocument jsonDoc(100);
+      DeserializationError error = deserializeJson(jsonDoc, sensorProps);
+
+      if (error) {
+        Serial.print("JSON parsing failed: ");
+        Serial.println(error.c_str());
+      } 
+      else {
+        sensorBuffer.ip = jsonDoc["ip"];
+        sensorBuffer.id = jsonDoc["id"];
+        sensorBuffer.fire_state = jsonDoc["firestate"];
+
+        VehicleNetwork.setSensorProps(sensorBuffer);
       }
  
       server.send(200, "text/plain", "SUCCESS!");
