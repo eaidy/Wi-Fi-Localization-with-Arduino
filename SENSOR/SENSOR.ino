@@ -42,6 +42,7 @@ const unsigned long interval = 650; // Blink interval in milliseconds
 
 // Fire state
 int fire_state = FALSE;
+int previous_state = FALSE;
 
 struct SensorProps {
   float humadity;
@@ -109,6 +110,12 @@ void loop() {
 
     if(fire_state){
       sendSensorProps();
+      previous_state = fire_state;
+    }
+
+    if(fire_state == FALSE && previous_state == TRUE){  // Sending fire state to the vehicle again to inform vehicle that fire is over.
+      sendSensorProps();
+      previous_state = fire_state;
     }
 
     Serial.print("IP Address : ");
