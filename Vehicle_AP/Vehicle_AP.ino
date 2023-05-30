@@ -120,14 +120,14 @@ class SystemNetwork {
         String response = http.getString();
 
         // Parse JSON response
-        DynamicJsonDocument jsonDoc(100); // Adjust the buffer size as per your response size
+        DynamicJsonDocument jsonDoc(100); 
         DeserializationError error = deserializeJson(jsonDoc, response);
 
         if (error) {
           Serial.print("JSON parsing failed: ");
           Serial.println(error.c_str());
         } else {
-          // Access parsed JSON values
+          // Assign parsed JSON properties
           node.id = jsonDoc["id"];
           node.ip = jsonDoc["ip"];
           node.distance = jsonDoc["distance"];
