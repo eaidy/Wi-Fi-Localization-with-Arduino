@@ -1,5 +1,5 @@
 // ESP-3
-// Trilateration sensor code for the sensor with id = 1
+// Trilateration sensor code for the sensor with id = 2
 
 #include <ESP8266WiFi.h>        // Include the Wi-Fi library
 #include <ESP8266HTTPClient.h>
