@@ -1,4 +1,4 @@
-// ESP-3
+// ESP-1
 // Trilateration sensor code for the sensor with id = 1
 
 #include <ESP8266WiFi.h>        // Include the Wi-Fi library
@@ -17,7 +17,7 @@
 // Prototypes
 void connectionStateToggle(void);
 void handleDistance();
-bool calculateDistance(float* distanceVariable);
+bool calculateDistance(double* distanceVariable);
 
 // Wi-Fi Configuration Variables
 const char* ssid     = "VehicleAP";      // The SSID (name) of the Wi-Fi network Vehicle provides
@@ -32,8 +32,8 @@ const unsigned long interval = 650; // Blink interval in milliseconds
 
 // RSSI Calibration constants
 const int RSSI_SAMPLES = 30;
-const float RSSI_AT_ONE_METER = -47;  // RSSI at one meter distance
-const float SIGNAL_LOSS_EXPONENT = 2.2;  // Signal loss exponent (path loss)
+const double RSSI_AT_ONE_METER = -47;  // RSSI at one meter distance
+const double SIGNAL_LOSS_EXPONENT = 2.2;  // Signal loss exponent (path loss)
 
 void setup() {
 
@@ -55,9 +55,7 @@ void setup() {
 
   int i = 0;
   while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
-    delay(1000);
-    Serial.print(++i);
-    Serial.print(' ');
+    delay(300);
   }
 
   sendPropsToVehicle();
@@ -86,6 +84,9 @@ void loop() {
 
     connectionStateToggle();
 
+    if(WiFi.status != WL_CONNECTED){
+      sendPropsToVehicle();
+    }
     Serial.print("IP Address : ");
     Serial.print(WiFi.localIP());
   }
@@ -107,7 +108,7 @@ void handleNodeProps(){
   NODE_PROPS["id"] = NODE_ID;
   NODE_PROPS["ip"] = WiFi.localIP().toString();
 
-  float calculated = calculateDistance();
+  double calculated = calculateDistance();
   if(calculated){
     NODE_PROPS["distance"] = calculated;
     
@@ -117,12 +118,12 @@ void handleNodeProps(){
    }
 }
 
-float calculateDistance(){
+double calculateDistance(){
 
   if(WiFi.status() == WL_CONNECTED){
 
     int rssiSum = 0, averageRssi;
-    float signalLoss, distance;
+    double signalLoss, distance;
 
     for (int j = 0; j < RSSI_SAMPLES; j++) {
       int rssi = WiFi.RSSI();
@@ -134,7 +135,7 @@ float calculateDistance(){
     signalLoss = RSSI_AT_ONE_METER - averageRssi;
     distance = pow(10, signalLoss / (10 * SIGNAL_LOSS_EXPONENT));
 
-    // float rssi = WiFi.RSSI();
+    // double rssi = WiFi.RSSI();
 
     return distance;
   } 

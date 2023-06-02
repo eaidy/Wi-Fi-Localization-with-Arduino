@@ -38,8 +38,8 @@ ESP8266WebServer server(80);
 
 // Coordinate System configuration - Node positions
 struct Coordinates {
-  float x;
-  float y;
+  double x;
+  double y;
 };
 
 Coordinates NODE1_XY = { 0, -5.0 };
@@ -51,29 +51,29 @@ Coordinates FIRE_SENSOR_XY = { 6.5, -2 };   // Fire Sensor's coordinates likely 
 struct TrilaterationNode {
   String ip = "";
   int id;
-  float distance = 0;
-  float x = 0;
-  float y = 0;
+  double distance = 0;
+  double x = 0;
+  double y = 0;
 };
 
 struct Vehicle {
-  float x;
-  float y;
+  double x;
+  double y;
 };
 
 struct FireSensor {
   String ip = "";
   int id = 4;
-  float distance = 0;
+  double distance = 0;
   int fire_state = FALSE;
-  const float x = FIRE_SENSOR_XY.x;
-  const float y = FIRE_SENSOR_XY.y;
+  const double x = FIRE_SENSOR_XY.x;
+  const double y = FIRE_SENSOR_XY.y;
 };
 
 struct NodeResponse {
   int id;
   const char* ip;
-  float distance;
+  double distance;
 };
 
 // Entire System's Class, everything about this network system is going to be configured here
@@ -140,7 +140,7 @@ class SystemNetwork {
       return node;
     }
 
-    bool configureNode(int NODE_ID, String IP, float distance = 0){
+    bool configureNode(int NODE_ID, String IP, double distance = 0){
       
       switch(NODE_ID){
         case 1:
@@ -202,6 +202,67 @@ class SystemNetwork {
       FIRE_SENSOR_NODE.ip = sensorProps.ip;
       FIRE_SENSOR_NODE.fire_state = sensorProps.fire_state;
     }
+
+    void getAll(){
+      if(NODE_1.ip != ""){
+        String url1 = "http://" + NODE_1.ip + ":80/getnodeprops";
+        getNodeProps(url1);
+      }
+      if(NODE_2.ip != ""){
+        String url2 = "http://" + NODE_2.ip + ":80/getnodeprops";
+        getNodeProps(url2);
+      }
+      if(NODE_3.ip != ""){
+        String url3 = "http://" + NODE_3.ip + ":80/getnodeprops";
+        getNodeProps(url3);
+      }
+      if(FIRE_SENSOR_NODE.ip != ""){
+        String url4 = "http://" + FIRE_SENSOR_NODE.ip + ":80/getnodeprops";
+        getNodeProps(url4);
+      }
+    }
+    void updateVehicleLocation(){
+    }
+
+    // Function to perform 2D trilateration
+    Coordinates trilateration() {
+
+        double d12 = sqrt(pow((NODE_2.x - NODE_1.x), 2) + pow((NODE_2.y - NODE_1.y), 2));
+        double d13 = sqrt(pow((NODE_3.x - NODE_1.x), 2) + pow((NODE_3.y - NODE_1.y), 2));
+        double d23 = sqrt(pow((NODE_3.x - NODE_2.x), 2) + pow((NODE_3.y - NODE_2.y), 2));
+
+        if (d12 <= NODE_1.distance + NODE_2.distance && d13 <= NODE_1.distance + NODE_3.distance && d23 <= NODE_2.distance + NODE_3.distance){
+
+          Serial.println("Circles intersect! Trilateration implementing...");
+
+          double r1sq = NODE_1.distance * NODE_1.distance;
+          double r2sq = NODE_2.distance * NODE_2.distance;
+          double r3sq = NODE_3.distance * NODE_3.distance;
+
+          // Calculate coefficients for the linear system of equations
+          double A = (-2 * NODE_1.x + 2 * NODE_2.x);
+          double B = (-2 * NODE_1.y + 2 * NODE_2.y);
+          double C = (NODE_1.distance*NODE_1.distance - NODE_2.distance*NODE_2.distance - NODE_1.x*NODE_1.x + NODE_2.x*NODE_2.x - NODE_1.y*NODE_1.y + NODE_2.y*NODE_2.y);
+          double D = (-2 * NODE_2.x + 2 * NODE_3.x);
+          double E = (-2 * NODE_2.y + 2 * NODE_3.y);
+          double F = (NODE_2.distance*NODE_2.distance - NODE_3.distance*NODE_3.distance - NODE_2.x*NODE_2.x + NODE_3.x*NODE_3.x - NODE_2.y*NODE_2.y + NODE_3.y*NODE_3.y);
+
+          // Calculate the coordinates of the trilateration point
+          double denominator = A * E - B * D;
+          double x = (C * E - B * F) / denominator;
+          double y = (A * F - C * D) / denominator;
+
+          // Return the trilateration point
+          return {x, y};
+        } else {
+          Serial.println("Circles don't intersect. Operation terminated.");
+          return {VEHICLE.x, VEHICLE.y};
+        }
+    }
+
+    void goToLocation(Coordinates coordinates){
+
+    }
 };
 
 IPAddress local_IP(192, 168, 1, 1);
@@ -260,18 +321,12 @@ void loop() {
   if (currentTime - previousTime >= 1000) { // Time conditional to run the loop without blocking it. Avoiding use of delay()
     previousTime = currentTime;
 
-    if(VehicleNetwork.NODE_1.ip != ""){
-      String url1 = "http://" + VehicleNetwork.NODE_1.ip + ":80/getnodeprops";
-      VehicleNetwork.getNodeProps(url1);
-    }
-    if(VehicleNetwork.NODE_2.ip != ""){
-      String url2 = "http://" + VehicleNetwork.NODE_2.ip + ":80/getnodeprops";
-      VehicleNetwork.getNodeProps(url2);
-    }
-    if(VehicleNetwork.NODE_3.ip != ""){
-      String url3 = "http://" + VehicleNetwork.NODE_3.ip + ":80/getnodeprops";
-      VehicleNetwork.getNodeProps(url3);
-    }
+    char buffer[100];
+
+    VehicleNetwork.getAll();  // Fetch every NODE properties
+    Coordinates temp = VehicleNetwork.trilateration();
+    sprintf(buffer, "x : %lf\ny : %lf", temp.x, temp.y);
+    Serial.println(buffer);
     
   }
 
@@ -305,44 +360,47 @@ void handleInitNode(){
 }
 
 void handleSensorProps(){
-      FireSensor sensorBuffer;
+    FireSensor sensorBuffer;
 
-      if (server.hasArg("plain")== false){ //Check if body received
-        server.send(200, "text/plain", "NO BODY AVAILABLE!");
-        return;
-      }
+    if (server.hasArg("plain")== false){ //Check if body received
+      server.send(200, "text/plain", "NO BODY AVAILABLE!");
+      return;
+    }
 
-      String sensorProps;
-      sensorProps = server.arg("plain");
+    String sensorProps;
+    sensorProps = server.arg("plain");
 
-      DynamicJsonDocument jsonDoc(100);
-      DeserializationError error = deserializeJson(jsonDoc, sensorProps);
+    DynamicJsonDocument jsonDoc(100);
+    DeserializationError error = deserializeJson(jsonDoc, sensorProps);
 
-      if (error) {
-        Serial.print("JSON parsing failed: ");
-        Serial.println(error.c_str());
-      } 
-      else {
-        sensorBuffer.ip = jsonDoc["ip"];
-        sensorBuffer.id = jsonDoc["id"];
-        sensorBuffer.fire_state = jsonDoc["firestate"];
+    if (error) {
+      Serial.print("JSON parsing failed: ");
+      Serial.println(error.c_str());    
+    } 
+    else {
+      String ip = jsonDoc["ip"];
+      int id = jsonDoc["id"];
+      double fireState = jsonDoc["firestate"];
+      sensorBuffer.ip = ip;
+      sensorBuffer.id = id;
+      sensorBuffer.fire_state = fireState;
 
-        VehicleNetwork.setSensorProps(sensorBuffer);
-      }
- 
-      server.send(200, "text/plain", "SUCCESS!");
+      VehicleNetwork.setSensorProps(sensorBuffer);
+    }
+
+    server.send(200, "text/plain", "SUCCESS!");
 }
 
 // Sensor / Engine methods
 
-int getDistance() {
+double getDistance() {
 	digitalWrite(US_TRIG, LOW);
 	delayMicroseconds(2);
 	digitalWrite(US_TRIG, HIGH);
 	delayMicroseconds(10);
 	digitalWrite(US_TRIG, LOW);
-	long duration = pulseIn(US_ECHO, HIGH, 30000);
-	int distance = duration * 0.034 / 2;
+	long duration = pulseIn(US_ECHO, HIGH);
+	double distance = duration * 0.034 / 2;
 	return distance;
 }
 

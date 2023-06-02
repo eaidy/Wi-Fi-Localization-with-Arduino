@@ -1,12 +1,11 @@
-// ESP-3
-// Trilateration sensor code for the sensor with id = 1
+// FIRE SENSOR with ID = 4
 
 #include <ESP8266WiFi.h>        // Include the Wi-Fi library
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WebServer.h>   // Include Server library
 #include <WiFiClient.h>
 #include <ArduinoJson.h>
-#include <dht.h>
+#include <DHT.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -21,6 +20,7 @@
 #define MQ2_PIN A1
 #define FLAME_PIN A0
 #define DHT_PIN 2
+#define DHT_TYPE DHT11
 #define LED_PIN 4
 
 #define INIT_URL ("http://192.168.1.1:80/initnode" + String(NODE_ID))
@@ -44,23 +44,27 @@ const unsigned long interval = 650; // Blink interval in milliseconds
 int fire_state = FALSE;
 int previous_state = FALSE;
 
-struct SensorProps {
-  float humadity;
-  float temperture;
-  int flame;
-  int gass;
-}
+struct SensorValues {
+  double humadity = 0;
+  double temperture = 0;
+  int flame = 0;
+  int gass = 0;
+};
 
 SensorValues sensorValues;
 
 // DHT Sensor
-dht DHT;
+DHT dht(DHT_PIN, DHT_TYPE);
 
 void setup() {
 
   Serial.begin(115200);         // Start the Serial communication to send messages to the computer
+  dht.begin();
   pinMode(SUCCESS_PIN, OUTPUT);
   pinMode(FAILURE_PIN, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
+
 
   // Initilize status pins
   digitalWrite(SUCCESS_PIN, LOW);
@@ -226,14 +230,12 @@ int checkFireState(SensorValues sensorValuesArg){
 SensorValues readSensorValues(){
   SensorValues sensorValuesBuffer;
 
-  int chk = DHT.read11(DHTPIN);
-  sensorValuesBuffer.temperture = DHT.temperature;
-  sensorValuesBuffer.humadity = DHT.humidity;
-  sensorValuesBuffer.flame = analogRead(FLAMEPIN);
-  sensorValuesBuffer.gass = analogRead(MQ2PIN);
+  sensorValuesBuffer.temperture = dht.readTemperature();
+  sensorValuesBuffer.humadity = dht.readHumidity();
+  sensorValuesBuffer.flame = analogRead(FLAME_PIN);
+  sensorValuesBuffer.gass = analogRead(MQ2_PIN);
 
   return sensorValuesBuffer;
-
 }
 
 

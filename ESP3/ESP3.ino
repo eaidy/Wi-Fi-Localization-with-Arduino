@@ -1,5 +1,5 @@
 // ESP-3
-// Trilateration sensor code for the sensor with id = 3
+// Trilateration sensor code for the sensor with id = 1
 
 #include <ESP8266WiFi.h>        // Include the Wi-Fi library
 #include <ESP8266HTTPClient.h>
@@ -10,15 +10,14 @@
 // Pre-Definitions
 #define SUCCESS_PIN 2           // Pin that indicates Wi-Fi connection with AP is established
 #define FAILURE_PIN 1           // Pin that indicates Wi-Fi connection is not established or lost
-#define FEEDBACK_PIN 3
 #define NODE_ID 3
 
-#define INIT_URL "http://192.168.1.1:80/initnode3"
+#define INIT_URL ("http://192.168.1.1:80/initnode" + String(NODE_ID))
 
 // Prototypes
 void connectionStateToggle(void);
 void handleDistance();
-bool calculateDistance(float* distanceVariable);
+bool calculateDistance(double* distanceVariable);
 
 // Wi-Fi Configuration Variables
 const char* ssid     = "VehicleAP";      // The SSID (name) of the Wi-Fi network Vehicle provides
@@ -33,9 +32,8 @@ const unsigned long interval = 650; // Blink interval in milliseconds
 
 // RSSI Calibration constants
 const int RSSI_SAMPLES = 30;
-const int DIST_SAMPLES = 15;
-const float RSSI_AT_ONE_METER = -37.19;  // RSSI at one meter distance
-const float SIGNAL_LOSS_EXPONENT = 2.13;  // Signal loss exponent (path loss)
+const double RSSI_AT_ONE_METER = -47;  // RSSI at one meter distance
+const double SIGNAL_LOSS_EXPONENT = 2.2;  // Signal loss exponent (path loss)
 
 void setup() {
 
@@ -109,7 +107,7 @@ void handleNodeProps(){
   NODE_PROPS["id"] = NODE_ID;
   NODE_PROPS["ip"] = WiFi.localIP().toString();
 
-  float calculated = calculateDistance();
+  double calculated = calculateDistance();
   if(calculated){
     NODE_PROPS["distance"] = calculated;
     
@@ -119,28 +117,24 @@ void handleNodeProps(){
    }
 }
 
-float calculateDistance(){
+double calculateDistance(){
 
   if(WiFi.status() == WL_CONNECTED){
 
     int rssiSum = 0, averageRssi;
-    float signalLoss, distance, distanceSum = 0;
+    double signalLoss, distance;
 
-    for(int i = 0; i < DIST_SAMPLES; i++){
-      for (int j = 0; j < RSSI_SAMPLES; j++) {
-        int rssi = WiFi.RSSI();
-        rssiSum += rssi;
-        delay(5);
-      }
-
-      averageRssi = rssiSum / RSSI_SAMPLES;
-      signalLoss = RSSI_AT_ONE_METER - averageRssi;
-      distanceSum += pow(10, signalLoss / (10 * SIGNAL_LOSS_EXPONENT));
-
-      // float rssi = WiFi.RSSI();
+    for (int j = 0; j < RSSI_SAMPLES; j++) {
+      int rssi = WiFi.RSSI();
+      rssiSum += rssi;
+      delay(5);
     }
 
-    distance = distanceSum / DIST_SAMPLES;
+    averageRssi = rssiSum / RSSI_SAMPLES;
+    signalLoss = RSSI_AT_ONE_METER - averageRssi;
+    distance = pow(10, signalLoss / (10 * SIGNAL_LOSS_EXPONENT));
+
+    // double rssi = WiFi.RSSI();
 
     return distance;
   } 
@@ -168,14 +162,14 @@ void sendPropsToVehicle(){
     String payload = http.getString();                  //Get the response payload
 
     if(httpCode == 200){
-      digitalWrite(FEEDBACK_PIN, LOW);
-      delay(50);
-      digitalWrite(FEEDBACK_PIN, HIGH);
-      delay(50);
-      digitalWrite(FEEDBACK_PIN, LOW);
-      delay(50);
-      digitalWrite(FEEDBACK_PIN, HIGH);
-      delay(50);
+      digitalWrite(SUCCESS_PIN, LOW);
+      delay(75);
+      digitalWrite(SUCCESS_PIN, HIGH);
+      delay(75);
+      digitalWrite(SUCCESS_PIN, LOW);
+      delay(75);
+      digitalWrite(SUCCESS_PIN, HIGH);
+      delay(75);
     }
     Serial.println(httpCode);   //Print HTTP return code
     Serial.println(payload);    //Print request response payload
@@ -184,13 +178,13 @@ void sendPropsToVehicle(){
  
   } else {
     digitalWrite(FAILURE_PIN, LOW);
-    delay(50);
+    delay(75);
     digitalWrite(FAILURE_PIN, HIGH);
-    delay(50);
+    delay(75);
     digitalWrite(FAILURE_PIN, LOW);
-    delay(50);
+    delay(75);
     digitalWrite(FAILURE_PIN, HIGH);
-    delay(50);
+    delay(75);
     Serial.println("Error in WiFi connection");
   }
 
