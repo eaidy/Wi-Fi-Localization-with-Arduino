@@ -84,7 +84,7 @@ void loop() {
 
     connectionStateToggle();
 
-    if(WiFi.status != WL_CONNECTED){
+    if(WiFi.status() != WL_CONNECTED){
       sendPropsToVehicle();
     }
     Serial.print("IP Address : ");

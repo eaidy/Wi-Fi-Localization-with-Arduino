@@ -23,6 +23,9 @@
 #define IN_3 0
 #define IN_4 2
 
+#define MOVE_DURATION 300;
+#define TURN_DURATION 200;
+
 // Node Server URL's
 #define NODE_CONFIG_URL "/getnodeprops"
 
@@ -35,6 +38,15 @@ const char* ssid = "VehicleAP";
 const char* password = "12345678";
 
 ESP8266WebServer server(80);
+
+// Navigation properties
+
+struct Navigation {
+  double currentDistance;
+  double previousDistance = -1; // -1 means initialization. It indicates first movement is always will be Forward.
+};
+
+Navigation navigationControl;
 
 // Coordinate System configuration - Node positions
 struct Coordinates {
@@ -224,7 +236,7 @@ class SystemNetwork {
     void updateVehicleLocation(){
     }
 
-    // Function to perform 2D trilateration
+    // Method to perform 2D trilateration
     Coordinates trilateration() {
 
         double d12 = sqrt(pow((NODE_2.x - NODE_1.x), 2) + pow((NODE_2.y - NODE_1.y), 2));
@@ -260,8 +272,17 @@ class SystemNetwork {
         }
     }
 
-    void goToLocation(Coordinates coordinates){
+    double getSensorDistance(){
+      return sqrt(pow((Vehicle.x - FIRE_SENSOR_NODE.x), 2) + pow((Vehicle.y - FIRE_SENSOR_NODE.y), 2));
+    }
 
+    void relativeStepMovement(){
+
+      navigationControl.currentDistance = getSensorDistance();
+
+      switch(navigationControl.currentDistance){
+        case
+      }
     }
 };
 
@@ -312,13 +333,15 @@ void setup() {
 
 }
 
+// ----------- MAIN
+
 void loop() {
 // LOOP
   server.handleClient();
 
   unsigned long currentTime = millis();
 
-  if (currentTime - previousTime >= 1000) { // Time conditional to run the loop without blocking it. Avoiding use of delay()
+  if (currentTime - previousTime >= 1000 && !fire_state) { // Time conditional to run the loop without blocking it. Avoiding use of delay()
     previousTime = currentTime;
 
     char buffer[100];
@@ -330,7 +353,34 @@ void loop() {
     
   }
 
+  if(VehicleNetwork.FIRE_SENSOR_NODE.fire_state){
+
+    VehicleNetwork.getAll();
+    navigationControl.currentDistance = getSensorDistance();
+
+    if(navigationControl.previousDistance < 0){
+      moveForward();
+    }
+    else if(abs(navigationControl.currentDistance - navigationControl.previousDistance) < 0.1){
+      moveForward();
+    }
+    else if((navigationControl.currentDistance - navigationControl.previousDistance) < 0){
+      moveForward();
+    }
+    else if((navigationControl.currentDistance - navigationControl.previousDistance) > 0){
+      turnRight();
+    }
+    else if((navigationControl.currentDistance =<  0.3)){
+      stopVehicle();
+    }
+
+    navigationControl.previousDistance = navigationControl.currentDistance;
+
+  }
+
 }
+
+// ----------- MAIN
 
 void handleInitNode(){
       if (server.hasArg("plain")== false){ //Check if body received
@@ -412,6 +462,8 @@ void moveForward() {
   digitalWrite(IN_4, LOW);
   analogWrite(EN_A, 255); // Set speed for motor A
   analogWrite(EN_B, 255); // Set speed for motor B
+  delay(MOVE_DURATION);
+  stopVehicle();
 }
 
 void moveBackward() {
@@ -421,24 +473,30 @@ void moveBackward() {
   digitalWrite(IN_4, HIGH);
   analogWrite(EN_A, 255); // Set speed for motor A
   analogWrite(EN_B, 255); // Set speed for motor B
+  delay(MOVE_DURATION);
+  stopVehicle();
 }
 
-void turnLeft(int angle = 0) {
+void turnLeft() {
   digitalWrite(IN_1, LOW);
   digitalWrite(IN_2, HIGH);
   digitalWrite(IN_3, HIGH);
   digitalWrite(IN_4, LOW);
   analogWrite(EN_A, 127); // Set speed for motor A
   analogWrite(EN_B, 127); // Set speed for motor B
+  delay(TURN_DURATION);
+  stopVehicle();
 }
 
-void turnRight(int angle = 0) {
+void turnRight() {
   digitalWrite(IN_1, HIGH);
   digitalWrite(IN_2, LOW);
   digitalWrite(IN_3, LOW);
   digitalWrite(IN_4, HIGH);
   analogWrite(EN_A, 127); // Set speed for motor A
   analogWrite(EN_B, 127); // Set speed for motor B
+  delay(TURN_DURATION);
+  stopVehicle();
 }
 
 void stopVehicle() {
