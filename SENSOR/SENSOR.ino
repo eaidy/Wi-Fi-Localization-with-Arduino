@@ -45,10 +45,10 @@ int fire_state = FALSE;
 int previous_state = FALSE;
 
 struct SensorValues {
-  int humadity = 0;
-  int temperture = 0;
-  int flame = 0;
-  double gass = 0;
+  double humadity;
+  double temperture;
+  bool flame;
+  int gass;
 };
 
 SensorValues sensorValues;
@@ -235,7 +235,7 @@ SensorValues readSensorValues(){
 
   sensorValuesBuffer.temperture = dht.readTemperature();
   sensorValuesBuffer.humadity = dht.readHumidity();
-  sensorValuesBuffer.flame = digitalRead(FLAME_PIN);
+  sensorValuesBuffer.flame = !digitalRead(FLAME_PIN);
   sensorValuesBuffer.gass = analogRead(MQ2_PIN);
 
 
