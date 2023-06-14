@@ -45,10 +45,10 @@ int fire_state = FALSE;
 int previous_state = FALSE;
 
 struct SensorValues {
-  double humadity = 0;
+  int humadity = 0;
   int temperture = 0;
   int flame = 0;
-  int gass = 0;
+  double gass = 0;
 };
 
 SensorValues sensorValues;
