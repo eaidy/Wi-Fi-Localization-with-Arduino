@@ -11,14 +11,14 @@
 #define FALSE 0
 
 // Pre-Definitions
-#define SUCCESS_PIN 6           // Pin that indicates Wi-Fi connection with AP is established
-#define FAILURE_PIN 7           // Pin that indicates Wi-Fi connection is not established or lost
+#define SUCCESS_PIN 16           // Pin that indicates Wi-Fi connection with AP is established
+#define FAILURE_PIN 14        // Pin that indicates Wi-Fi connection is not established or lost
 #define NODE_ID 4
 
 
 #define BUZZER_PIN 3
-#define MQ2_PIN A1
-#define FLAME_PIN A0
+#define MQ2_PIN A0
+#define FLAME_PIN 5
 #define DHT_PIN 2
 #define DHT_TYPE DHT11
 #define LED_PIN 4
@@ -211,7 +211,7 @@ void sendSensorProps(){
 }
 
 int checkFireState(SensorValues sensorValuesArg){
-  if (sensorValuesArg.flame < 500 && sensorValuesArg.gass > 800 && sensorValuesArg.temperture > 30) {
+  if (sensorValuesArg.flame == HIGH || sensorValuesArg.gass > 100 || sensorValuesArg.temperture == HIGH) {
     Serial.println("Yangin Tespit Edildi!");
     // Aktif buzzer ve ledi çalıştır
     digitalWrite(BUZZER_PIN, HIGH);
