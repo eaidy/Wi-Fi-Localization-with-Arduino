@@ -46,7 +46,7 @@ int previous_state = FALSE;
 
 struct SensorValues {
   double humadity = 0;
-  double temperture = 0;
+  int temperture = 0;
   int flame = 0;
   int gass = 0;
 };
