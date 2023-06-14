@@ -215,14 +215,11 @@ void sendSensorProps(){
 int checkFireState(SensorValues sensorValuesArg){
   if (sensorValuesArg.flame == HIGH || sensorValuesArg.gass > 100 || sensorValuesArg.temperture > 40) {
     Serial.println("Yangin Tespit Edildi!");
-    // Aktif buzzer ve ledi çalıştır
     digitalWrite(BUZZER_PIN, HIGH);
     digitalWrite(LED_PIN, HIGH);
-    // Buraya ek olarak yapmak istediğiniz başka bir tepkiyi ekleyebilirsiniz.
-    // Örneğin, SMS gönderme, acil durum bildirimi vb.
+
     return TRUE;
   } else {
-    // Yangın tespit edilmediğinde buzzer ve ledi kapat
     digitalWrite(BUZZER_PIN, LOW);
     digitalWrite(LED_PIN, LOW);
     return FALSE;
