@@ -59,12 +59,15 @@ DHT dht(DHT_PIN, DHT_TYPE);
 void setup() {
 
   Serial.begin(115200);         // Start the Serial communication to send messages to the computer
-  dht.begin();
+
   pinMode(SUCCESS_PIN, OUTPUT);
   pinMode(FAILURE_PIN, OUTPUT);
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
+  pinMode(MQ2_PIN, INPUT);
+  pinMode(FLAME_PIN, INPUT);
 
+  dht.begin();
 
   // Initilize status pins
   digitalWrite(SUCCESS_PIN, LOW);
@@ -234,6 +237,8 @@ SensorValues readSensorValues(){
   sensorValuesBuffer.humadity = dht.readHumidity();
   sensorValuesBuffer.flame = digitalRead(FLAME_PIN);
   sensorValuesBuffer.gass = analogRead(MQ2_PIN);
+
+
 
   return sensorValuesBuffer;
 }
