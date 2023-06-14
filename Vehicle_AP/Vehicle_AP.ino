@@ -23,8 +23,8 @@
 #define IN_3 0
 #define IN_4 2
 
-#define MOVE_DURATION 300;
-#define TURN_DURATION 200;
+#define MOVE_DURATION 300
+#define TURN_DURATION 200
 
 // Node Server URL's
 #define NODE_CONFIG_URL "/getnodeprops"
@@ -273,17 +273,10 @@ class SystemNetwork {
     }
 
     double getSensorDistance(){
-      return sqrt(pow((Vehicle.x - FIRE_SENSOR_NODE.x), 2) + pow((Vehicle.y - FIRE_SENSOR_NODE.y), 2));
+      double distance = sqrt(pow((VEHICLE.x - FIRE_SENSOR_NODE.x), 2) + pow((VEHICLE.y - FIRE_SENSOR_NODE.y), 2));
+      return distance;
     }
 
-    void relativeStepMovement(){
-
-      navigationControl.currentDistance = getSensorDistance();
-
-      switch(navigationControl.currentDistance){
-        case
-      }
-    }
 };
 
 IPAddress local_IP(192, 168, 1, 1);
@@ -341,7 +334,7 @@ void loop() {
 
   unsigned long currentTime = millis();
 
-  if (currentTime - previousTime >= 1000 && !fire_state) { // Time conditional to run the loop without blocking it. Avoiding use of delay()
+  if (currentTime - previousTime >= 1000 && !VehicleNetwork.FIRE_SENSOR_NODE.fire_state) { // Time conditional to run the loop without blocking it. Avoiding use of delay()
     previousTime = currentTime;
 
     char buffer[100];
@@ -356,7 +349,7 @@ void loop() {
   if(VehicleNetwork.FIRE_SENSOR_NODE.fire_state){
 
     VehicleNetwork.getAll();
-    navigationControl.currentDistance = getSensorDistance();
+    navigationControl.currentDistance = VehicleNetwork.getSensorDistance();
 
     if(navigationControl.previousDistance < 0){
       moveForward();
@@ -370,7 +363,7 @@ void loop() {
     else if((navigationControl.currentDistance - navigationControl.previousDistance) > 0){
       turnRight();
     }
-    else if((navigationControl.currentDistance =<  0.3)){
+    else if((navigationControl.currentDistance <=  0.3)){
       stopVehicle();
     }
 
