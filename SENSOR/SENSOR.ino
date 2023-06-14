@@ -211,7 +211,7 @@ void sendSensorProps(){
 }
 
 int checkFireState(SensorValues sensorValuesArg){
-  if (sensorValuesArg.flame == HIGH || sensorValuesArg.gass > 100 || sensorValuesArg.temperture == HIGH) {
+  if (sensorValuesArg.flame == HIGH || sensorValuesArg.gass > 100 || sensorValuesArg.temperture > 40) {
     Serial.println("Yangin Tespit Edildi!");
     // Aktif buzzer ve ledi çalıştır
     digitalWrite(BUZZER_PIN, HIGH);
