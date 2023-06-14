@@ -238,7 +238,15 @@ SensorValues readSensorValues(){
   sensorValuesBuffer.flame = !digitalRead(FLAME_PIN);
   sensorValuesBuffer.gass = analogRead(MQ2_PIN);
 
-
+  Serial.print("Temperture : ");
+  Serial.print(sensorValuesBuffer.temperture);
+  Serial.print("\nHumadity : ");
+  Serial.print(sensorValuesBuffer.humadity);
+  Serial.print("\nFlame : ");
+  Serial.print(sensorValuesBuffer.flame);
+  Serial.print("\nGass : ");
+  Serial.print(ssensorValuesBuffer.gass);
+  Serial.print("\n\n  ------------\n\n");
 
   return sensorValuesBuffer;
 }
