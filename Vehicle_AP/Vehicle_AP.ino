@@ -23,8 +23,8 @@
 #define IN_3 0
 #define IN_4 2
 
-#define MOVE_DURATION 300
-#define TURN_DURATION 200
+#define MOVE_DURATION 750
+#define TURN_DURATION 400
 
 // Node Server URL's
 #define NODE_CONFIG_URL "/getnodeprops"

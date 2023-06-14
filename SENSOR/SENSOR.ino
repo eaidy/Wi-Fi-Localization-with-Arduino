@@ -15,7 +15,6 @@
 #define FAILURE_PIN 14        // Pin that indicates Wi-Fi connection is not established or lost
 #define NODE_ID 4
 
-
 #define BUZZER_PIN 3
 #define MQ2_PIN A0
 #define FLAME_PIN 5
@@ -134,7 +133,7 @@ void connectionStateToggle(){
   if(WiFi.status() == WL_CONNECTED){
     digitalWrite(SUCCESS_PIN, HIGH);
     digitalWrite(FAILURE_PIN, LOW);
-  } 
+  }
   else {
     digitalWrite(SUCCESS_PIN, LOW);
     digitalWrite(FAILURE_PIN, HIGH);
@@ -230,7 +229,7 @@ int checkFireState(SensorValues sensorValuesArg){
   }
 }
 
-SensorValues readSensorValues(){
+SensorValues readSensorValues() {
   SensorValues sensorValuesBuffer;
 
   sensorValuesBuffer.temperture = dht.readTemperature();
@@ -245,7 +244,7 @@ SensorValues readSensorValues(){
   Serial.print("\nFlame : ");
   Serial.print(sensorValuesBuffer.flame);
   Serial.print("\nGass : ");
-  Serial.print(ssensorValuesBuffer.gass);
+  Serial.print(sensorValuesBuffer.gass);
   Serial.print("\n\n  ------------\n\n");
 
   return sensorValuesBuffer;
