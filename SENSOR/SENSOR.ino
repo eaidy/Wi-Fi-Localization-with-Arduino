@@ -232,7 +232,7 @@ SensorValues readSensorValues(){
 
   sensorValuesBuffer.temperture = dht.readTemperature();
   sensorValuesBuffer.humadity = dht.readHumidity();
-  sensorValuesBuffer.flame = analogRead(FLAME_PIN);
+  sensorValuesBuffer.flame = digitalRead(FLAME_PIN);
   sensorValuesBuffer.gass = analogRead(MQ2_PIN);
 
   return sensorValuesBuffer;
